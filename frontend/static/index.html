@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Accode</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header>
+    <div class="brand">Accode<span class="brand-sub">in-house coding agent</span></div>
+    <div class="meta" id="meta">connecting&hellip;</div>
+  </header>
+
+  <main id="transcript">
+    <div class="welcome" id="welcome">
+      <h1>What should Accode do?</h1>
+      <p>Ask for a coding task, or run a full Hive&nbsp;&rarr;&nbsp;GCP migration.</p>
+      <div class="examples">
+        <button class="example">Run discovery on ../hive-to-gcp-agent and summarise it</button>
+        <button class="example">Migrate the hive repo at ../hive-repo to GCP and test it</button>
+        <button class="example">List every TODO comment in this project</button>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <textarea id="input" rows="1"
+      placeholder="Ask Accode to do something&hellip;  (Enter to send, Shift+Enter for newline)"></textarea>
+    <button id="cancel" class="cancel hidden">Stop</button>
+    <button id="send" disabled>Send</button>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

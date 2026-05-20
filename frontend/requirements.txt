@@ -1,0 +1,3 @@
+# Web frontend dependencies — installed on top of the root requirements.txt.
+fastapi>=0.110
+uvicorn[standard]>=0.27

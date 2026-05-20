@@ -1,0 +1,63 @@
+# ---------------------------------------------------------------------------
+# Accode — example configuration. Copy to config.yaml and fill in your values.
+# Everything has a default; the only thing Accode truly needs is an Anthropic
+# API key (set here, or via the ANTHROPIC_API_KEY environment variable).
+# ---------------------------------------------------------------------------
+
+anthropic:
+  # API key for Claude. Falls back to the ANTHROPIC_API_KEY env var.
+  api_key: null
+  # Model used by the migration converters (one LLM call per converted file).
+  model: "claude-sonnet-4-6"
+  max_tokens: 16000
+
+agent:
+  # Model for the agentic loop itself. Defaults to anthropic.model.
+  model: "claude-sonnet-4-6"
+  max_tokens: 8192
+  # Hard cap on tool-calling steps in a single run.
+  max_steps: 60
+  # Per-tool permission override: allow | ask | deny.
+  # Defaults: read-only tools = allow; tools that write files or create cloud
+  # resources = ask. Uncomment entries below to override.
+  permissions: {}
+    # run_bash: ask
+    # migration_bq_setup: deny
+
+# --- Hive -> GCP migration settings (consumed by the migration_* tools) -----
+gcp:
+  project: "my-gcp-project"
+  region: "US"
+  # Path to a service-account JSON file; null = Application Default Credentials.
+  credentials_file: null
+
+# Hive database -> BigQuery dataset name. Include BOTH the Hive variable name
+# (as in ${cs_db}.table) and the resolved database name (as in cs_db=hivesrcdb).
+dataset_map:
+  cs_db: "src_raw"
+  hivesrcdb: "src_raw"
+
+# HDFS path prefix -> GCS URI prefix (matched longest-first).
+path_map:
+  "/corp/analytics": "gs://my-bucket/analytics"
+
+gcs_bucket: "gs://my-bucket"
+
+# Optional: declare BigQuery types for specific @params used in HQL queries.
+query_parameter_types: {}
+  # trans_dt: DATE
+
+output:
+  dir: "./migrated"
+  overwrite: true
+
+# Folder names that hold scheduler / event-engine XML -> converted to Airflow DAGs.
+dag_xml_dirs:
+  - "event_engine"
+  - "scheduler"
+  - "workflows"
+
+# Folder names that hold test files.
+test_dirs:
+  - "tests"
+  - "test"

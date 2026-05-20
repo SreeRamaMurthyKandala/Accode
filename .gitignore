@@ -1,0 +1,22 @@
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+
+# local config carries secrets — never commit it
+config.yaml
+
+# migration output
+migrated/
+.accode_state.json
+VALIDATION_ERRORS.log
+MIGRATION_REPORT.md
+
+# editors / build
+.idea/
+.vscode/
+*.egg-info/
+build/
+dist/

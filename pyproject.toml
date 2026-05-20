@@ -1,0 +1,24 @@
+[project]
+name = "accode"
+version = "0.1.0"
+description = "In-house coding agent with a built-in Hive->GCP migration toolset"
+requires-python = ">=3.10"
+dependencies = [
+    "anthropic>=0.44.0",
+    "google-cloud-bigquery>=3.27.0",
+    "google-auth>=2.0.0",
+    "pyyaml>=6.0",
+    "click>=8.1",
+    "rich>=13.0",
+    "pytest>=8.0",
+]
+
+[project.scripts]
+accode = "accode.cli:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["accode*"]
