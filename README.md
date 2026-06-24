@@ -4,11 +4,9 @@ An in-house AI coding agent. Accode is a generic coding agent — like Copilot o
 Claude Code — with a built-in, first-class toolset for migrating Hive/Hadoop
 repositories to Google Cloud (BigQuery + GCS + Airflow).
 
-It is the successor to `hive-to-gcp-agent`. That project was a fixed pipeline:
-a Python `Orchestrator` ran scan → convert → validate → fix in a hard-coded
-sequence. Accode **inverts the control flow** — the LLM drives, choosing tools
-in a loop — and **decomposes that orchestrator into independent tools** the
-agent composes itself.
+The control flow is LLM-driven: the model picks tools in a loop instead of
+following a hard-coded pipeline. Migration is one workflow among many — the
+same loop runs generic coding tasks too.
 
 ## How it works
 
@@ -31,7 +29,7 @@ agent composes itself.
 │    read_file  write_file  edit_file  list_files               │
 │    search_text  run_bash                                      │
 │                                                               │
-│  Hive → GCP migration toolset (the old orchestrator, split up) │
+│  Hive → GCP migration toolset                                 │
 │    migration_discovery    migration_convert                   │
 │    migration_syntax_check migration_bq_setup                   │
 │    migration_bq_validate  migration_run_tests                  │
@@ -39,36 +37,34 @@ agent composes itself.
 └────────────────────────────────────────────────────────────────┘
 ```
 
-The loop itself is ~90 lines and entirely tool-agnostic. The stage ordering
-that used to be hard-coded in `Orchestrator.run()` now lives in the system
-prompt (`accode/agent/prompt.py`) as a workflow the model follows.
+The loop itself is ~90 lines and entirely tool-agnostic. Stage ordering lives
+in the system prompt (`accode/agent/prompt.py`) as a workflow the model
+follows.
 
-## The migration toolset = the orchestrator, decomposed
+## The migration toolset
 
-Each migration tool wraps exactly one stage of the original orchestrator. The
-proven conversion engine (scanner, 8 per-type converters, BigQuery validator,
-syntax checker, test runner, fix agent, reporter) is vendored **unchanged**
-under `accode/engine/` — only the orchestrator was dissolved.
+Each tool wraps one stage of the migration pipeline. The conversion engine
+(scanner, 8 per-type converters, BigQuery validator, syntax checker, test
+runner, fix agent, reporter) lives under `accode/engine/`.
 
-| Original orchestrator stage        | Accode tool              |
-|------------------------------------|--------------------------|
-| `scan()`                           | `migration_discovery`    |
-| `_process_file()` conversion loop  | `migration_convert`      |
-| `_run_syntax_checks()`             | `migration_syntax_check` |
-| `ensure_datasets()`+`execute_ddl()`| `migration_bq_setup`     |
-| `validate_only()` (BQ dry-run)     | `migration_bq_validate`  |
-| `_run_tests()`                     | `migration_run_tests`    |
-| `FixAgent.fix_file()`              | `migration_fix`          |
-| `Reporter` + `_patch_report()`     | `migration_report`       |
+| Tool                     | Stage                                        |
+|--------------------------|----------------------------------------------|
+| `migration_discovery`    | Scan repo, classify files                    |
+| `migration_convert`      | Convert files (HQL → BQ SQL, etc.)           |
+| `migration_syntax_check` | bash/python parse checks on converted code   |
+| `migration_bq_setup`     | Create datasets, run DDL                     |
+| `migration_bq_validate`  | BigQuery dry-run on converted SQL            |
+| `migration_run_tests`    | Run pytest on migrated tests                 |
+| `migration_fix`          | Send failures back to the model for repair   |
+| `migration_report`       | Generate `MIGRATION_REPORT.md`               |
 
-- **Run them in order** (the model does this when asked to migrate a repo) and
-  you reproduce the full original pipeline.
+- **Run them in order** to migrate a whole repo.
 - **Run one on its own** — "just discover what's in this repo", "only dry-run
   the SQL" — and you get that single stage.
 
-State that the orchestrator threaded in memory (conversion results, DDL paths)
-is persisted to `.accode_state.json` in the output directory: `migration_convert`
-writes it, `migration_bq_validate` / `migration_run_tests` update it, and
+Shared state between tools (conversion results, DDL paths) is persisted to
+`.accode_state.json` in the output directory: `migration_convert` writes it,
+`migration_bq_validate` / `migration_run_tests` update it, and
 `migration_report` reads it.
 
 ## Install
@@ -87,7 +83,7 @@ GCP credentials are only needed for the BigQuery stages (`migration_bq_setup`,
 
 ```bash
 # one-off task
-python -m accode "convert the hive repo at ../hive-to-gcp-agent/Sample_hive_repo to GCP and test it"
+python -m accode "convert the hive repo at ./hive-sample to GCP and test it"
 
 # a single stage
 python -m accode "run discovery on ../some-hive-repo and tell me what's there"
